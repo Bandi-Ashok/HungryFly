@@ -1,0 +1,5 @@
+node_modules/
+.env
+hungryfly.db
+*.log
+.DS_Store

@@ -1,0 +1,432 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HungryFly · Real Products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#f5f5f5; }
+    #app { max-width:450px; margin:0 auto; background:white; min-height:100vh; position:relative; }
+    .page { display:none; padding:16px; min-height:100vh; background:white; }
+    .page.active { display:block; }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .header h2 { font-size:22px; font-weight:800; background:linear-gradient(135deg,#FF6B00,#FF3E1D); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .search-box { background:#f5f5f5; padding:12px 16px; border-radius:30px; display:flex; align-items:center; gap:10px; margin-bottom:16px; cursor:pointer; }
+    .search-box i { color:#FF6B00; }
+    .search-box input { border:none; background:none; outline:none; width:100%; }
+    .btn { background:#FF6B00; color:white; border:none; padding:14px; border-radius:30px; font-weight:600; cursor:pointer; width:100%; }
+    .btn-small { padding:8px 16px; width:auto; font-size:13px; }
+    .category-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px 8px; margin:20px 0; }
+    .category-card { text-align:center; cursor:pointer; }
+    .category-icon { width:65px; height:65px; background:#FFF0E6; border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-size:30px; color:#FF6B00; }
+    .product-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:16px 0; }
+    .product-card { background:white; border-radius:16px; padding:10px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border:1px solid #f0f0f0; cursor:pointer; }
+    .product-image { width:100%; aspect-ratio:1; background:#fafafa; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .product-image img { width:100%; height:100%; object-fit:cover; border-radius:12px; }
+    .product-image span { font-size:40px; }
+    .product-price { font-weight:700; font-size:16px; }
+    .product-rating { color:#FFB800; font-size:12px; }
+    .badge { background:#4CAF50; color:white; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; position:absolute; top:8px; right:8px; }
+    .filter-scroll { display:flex; gap:8px; overflow-x:auto; padding:8px 0 16px; white-space:nowrap; }
+    .filter-chip { padding:8px 16px; background:#f0f0f0; border-radius:30px; font-size:13px; cursor:pointer; display:inline-block; }
+    .filter-chip.active { background:#FF6B00; color:white; }
+    .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); max-width:450px; width:100%; background:white; display:flex; justify-content:space-around; padding:10px 16px; border-top:1px solid #eee; z-index:1000; }
+    .nav-item { display:flex; flex-direction:column; align-items:center; color:#999; cursor:pointer; font-size:12px; }
+    .nav-item.active { color:#FF6B00; }
+    .nav-item i { font-size:22px; margin-bottom:2px; }
+    .cart-badge { position:absolute; top:-4px; right:-4px; background:#FF6B00; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; align-items:center; justify-content:center; }
+    .toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:12px 24px; border-radius:40px; z-index:2000; animation:slideUp 0.3s; }
+    @keyframes slideUp { from { opacity:0; transform:translate(-50%,20px); } to { opacity:1; transform:translate(-50%,0); } }
+    .section-title { display:flex; justify-content:space-between; align-items:baseline; margin:20px 0 12px; }
+    .section-title h3 { font-size:18px; font-weight:700; }
+    .section-title a { color:#FF6B00; font-size:13px; font-weight:600; cursor:pointer; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- LOGIN -->
+  <div id="loginPage" class="page active">
+    <div style="text-align:center; padding:40px 20px;">
+      <i class="fas fa-utensils" style="font-size:70px; color:#FF6B00;"></i>
+      <h1 style="font-size:34px; color:#FF6B00;">HungryFly</h1>
+      <p>35+ Categories · Real-Time Delivery</p>
+      <input type="tel" id="loginMobile" placeholder="Mobile Number" value="9876543210" style="width:100%; padding:16px; margin:16px 0; border-radius:40px; border:1px solid #ddd;">
+      <input type="password" id="loginPassword" placeholder="Password" value="123456" style="width:100%; padding:16px; margin-bottom:24px; border-radius:40px; border:1px solid #ddd;">
+      <button class="btn" onclick="login()">Sign In</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="homePage" class="page">
+    <div class="header"><h2>HungryFly</h2><i class="fas fa-shopping-cart" onclick="showPage('cartPage')"><span class="cart-badge" id="homeCartCount">0</span></i></div>
+    <div class="search-box" onclick="showPage('searchPage')"><i class="fas fa-search"></i><input placeholder="Search across 35+ categories..." readonly></div>
+    <div class="section-title"><h3>All Categories</h3><a onclick="showPage('categoriesPage')">See All</a></div>
+    <div class="category-grid" id="homeCategories"></div>
+    <div class="section-title"><h3>🔥 Trending Now</h3><a onclick="loadTrending()">More</a></div>
+    <div class="product-grid" id="trendingGrid"></div>
+  </div>
+
+  <!-- CATEGORIES MASTER -->
+  <div id="categoriesPage" class="page">
+    <div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>All Categories</h2></div>
+    <div class="category-grid" id="allCategoriesGrid"></div>
+  </div>
+
+  <!-- CATEGORY PRODUCTS -->
+  <div id="categoryPage" class="page">
+    <div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2 id="catTitle"></h2><i class="fas fa-shopping-cart" onclick="showPage('cartPage')"><span class="cart-badge" id="catCartCount">0</span></i></div>
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="catSearch" placeholder="Search in this category..."></div>
+    <div class="filter-scroll" id="subcatFilters"></div>
+    <select id="sortSelect" onchange="applySort()"><option value="popular">Popular</option><option value="price-low">Price: Low-High</option><option value="price-high">Price: High-Low</option><option value="rating">Rating</option></select>
+    <div id="productStats"></div>
+    <div class="product-grid" id="catProductGrid"></div>
+    <button class="btn-small" id="loadMoreBtn" onclick="loadMoreProducts()">Load More</button>
+  </div>
+
+  <!-- SEARCH -->
+  <div id="searchPage" class="page">
+    <div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Search</h2></div>
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="globalSearch" placeholder="Search products..."></div>
+    <div class="product-grid" id="searchResultsGrid"></div>
+  </div>
+
+  <!-- CART -->
+  <div id="cartPage" class="page">
+    <div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Cart</h2><i class="fas fa-trash" onclick="clearCart()"></i></div>
+    <div id="cartItemsContainer"></div>
+    <div><input id="couponInput" placeholder="Coupon code"><button class="btn-small" onclick="applyCoupon()">Apply</button></div>
+    <div>Subtotal: ₹<span id="cartSubtotal">0</span></div>
+    <div>Total: ₹<span id="cartTotal">0</span></div>
+    <button class="btn" onclick="placeOrder()">Place Order</button>
+  </div>
+
+  <!-- ORDER CONFIRM, TRACKING, PROFILE (simplified) -->
+  <div id="orderConfirmPage" class="page" style="text-align:center;"><i class="fas fa-check-circle" style="font-size:80px; color:#4CAF50;"></i><h2>Order Placed!</h2><button class="btn" onclick="showPage('homePage')">Home</button></div>
+  <div id="trackingPage" class="page"><div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Live Tracking</h2></div><i class="fas fa-motorcycle" style="font-size:40px;"></i></div>
+  <div id="profilePage" class="page"><div class="header"><h2>Profile</h2></div><button class="btn" onclick="logout()">Logout</button></div>
+  <div id="notificationsPage" class="page"><div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Notifications</h2></div><div id="notifList"></div></div>
+  <div id="offersPage" class="page"><div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Offers</h2></div><div id="offersList"></div></div>
+  <div id="ordersPage" class="page"><div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Order History</h2></div><div id="orderHistoryList"></div></div>
+  <div id="chatPage" class="page"><div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Support</h2></div><div>Chat support coming soon</div></div>
+  <div id="settingsPage" class="page"><div class="header"><i class="fas fa-arrow-left" onclick="goBack()"></i><h2>Settings</h2></div></div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="showPage('homePage')"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item" onclick="showPage('categoriesPage')"><i class="fas fa-th"></i><span>Categories</span></div>
+    <div class="nav-item" onclick="showPage('cartPage')"><i class="fas fa-shopping-cart"></i><span>Cart</span><span class="cart-badge" id="navCartCount">0</span></div>
+    <div class="nav-item" onclick="showPage('profilePage')"><i class="fas fa-user"></i><span>Profile</span></div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = window.location.origin + '/api';
+  let token = localStorage.getItem('token');
+  let currentCategory = '';
+  let currentFilter = 'all';
+  let currentSort = 'popular';
+  let currentPage = 1;
+  let totalPages = 1;
+
+  async function apiCall(endpoint, options = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(API_BASE + endpoint, { ...options, headers });
+    return res.json();
+  }
+
+  async function login() {
+    const mobile = document.getElementById('loginMobile').value;
+    const password = document.getElementById('loginPassword').value;
+    const data = await apiCall('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ mobile, password })
+    });
+    if (data.token) {
+      token = data.token;
+      localStorage.setItem('token', token);
+      showPage('homePage');
+      loadHomeData();
+      updateCartCount();
+      showToast('Welcome ' + (data.user?.name || 'User'));
+    } else {
+      showToast('Login failed: ' + (data.error || 'Unknown error'));
+    }
+  }
+
+  async function loadHomeData() {
+    await loadCategories();
+    await loadTrending();
+  }
+
+  async function loadCategories() {
+    const cats = await apiCall('/categories');
+    const homeGrid = document.getElementById('homeCategories');
+    homeGrid.innerHTML = cats.slice(0,12).map(c => `
+      <div class="category-card" onclick="showCategoryPage('${c.name}')">
+        <div class="category-icon">${c.icon}</div>
+        <span>${c.name}</span>
+      </div>
+    `).join('');
+    const allGrid = document.getElementById('allCategoriesGrid');
+    if (allGrid) allGrid.innerHTML = cats.map(c => `
+      <div class="category-card" onclick="showCategoryPage('${c.name}')">
+        <div class="category-icon">${c.icon}</div>
+        <span>${c.name}</span>
+      </div>
+    `).join('');
+  }
+
+  async function loadTrending() {
+    const trending = await apiCall('/products/trending?limit=4');
+    document.getElementById('trendingGrid').innerHTML = trending.map(p => productCard(p)).join('');
+  }
+
+  async function showCategoryPage(catName) {
+    currentCategory = catName;
+    currentPage = 1;
+    currentFilter = 'all';
+    const cats = await apiCall('/categories');
+    const cat = cats.find(c => c.name === catName);
+    document.getElementById('catTitle').innerHTML = catName + ' ' + (cat ? cat.icon : '');
+    // Fetch first page to get subcategories
+    const data = await apiCall(`/products?category=${encodeURIComponent(catName)}&limit=100`);
+    const subcats = [...new Set(data.products.map(p => p.subcategoryName).filter(Boolean))];
+    let filtersHtml = '<span class="filter-chip active" onclick="filterSubcat(\'all\')">All</span>';
+    subcats.forEach(s => filtersHtml += `<span class="filter-chip" onclick="filterSubcat('${s}')">${s}</span>`);
+    document.getElementById('subcatFilters').innerHTML = filtersHtml;
+    await loadCategoryProducts();
+    showPage('categoryPage');
+  }
+
+  async function loadCategoryProducts() {
+    const params = new URLSearchParams({
+      category: currentCategory,
+      subcategory: currentFilter === 'all' ? '' : currentFilter,
+      sort: currentSort,
+      page: currentPage,
+      limit: 20
+    });
+    const data = await apiCall(`/products?${params.toString()}`);
+    document.getElementById('catProductGrid').innerHTML = data.products.map(p => productCard(p)).join('');
+    document.getElementById('productStats').innerHTML = `Showing ${data.products.length} of ${data.total} products`;
+    totalPages = data.totalPages;
+    document.getElementById('loadMoreBtn').style.display = currentPage >= totalPages ? 'none' : 'inline-block';
+  }
+
+  function loadMoreProducts() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      loadCategoryProducts();
+    }
+  }
+
+  function applySort() {
+    currentSort = document.getElementById('sortSelect').value;
+    currentPage = 1;
+    loadCategoryProducts();
+  }
+
+  function filterSubcat(sub) {
+    currentFilter = sub;
+    currentPage = 1;
+    loadCategoryProducts();
+    document.querySelectorAll('#subcatFilters .filter-chip').forEach(ch => ch.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  function productCard(p) {
+    const disc = p.discountPercent ? `<span class="badge">-${p.discountPercent}%</span>` : '';
+    // imageEmoji now contains URL after update-images.js
+    const imageHtml = `<div class="product-image"><img src="${p.imageEmoji}" alt="${p.name}" onerror="this.onerror=null;this.parentElement.innerHTML='<span>📦</span>'"></div>`;
+    return `<div class="product-card" onclick="addToCart(${p.productId},'${p.name.replace(/'/g,"\\'")}',${p.price})">
+      <div style="position:relative;">${imageHtml}${disc}</div>
+      <h4 style="font-size:14px;">${p.name}</h4>
+      <div class="product-rating">★ ${p.rating}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="product-price">₹${p.price}</span>
+        <button class="btn-small" onclick="event.stopPropagation();addToCart(${p.productId},'${p.name.replace(/'/g,"\\'")}',${p.price})">ADD</button>
+      </div>
+    </div>`;
+  }
+
+  async function addToCart(productId, name, price) {
+    if (!token) { showToast('Please login first'); return; }
+    await apiCall('/cart', { method: 'POST', body: JSON.stringify({ productId, quantity: 1 }) });
+    showToast(`Added ${name}`);
+    updateCartCount();
+  }
+
+  async function updateCartCount() {
+    if (!token) return;
+    const items = await apiCall('/cart');
+    const total = items.reduce((s, i) => s + i.quantity, 0);
+    ['homeCartCount', 'catCartCount', 'navCartCount'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = total;
+    });
+  }
+
+  async function renderCart() {
+    if (!token) { showPage('loginPage'); return; }
+    const items = await apiCall('/cart');
+    const container = document.getElementById('cartItemsContainer');
+    if (items.length === 0) {
+      container.innerHTML = '<p style="padding:40px; text-align:center;">Cart empty</p>';
+      document.getElementById('cartSubtotal').innerText = '0';
+      document.getElementById('cartTotal').innerText = '0';
+      return;
+    }
+    let subtotal = 0;
+    container.innerHTML = items.map(item => {
+      subtotal += item.price * item.quantity;
+      return `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #eee;">
+        <div><h4>${item.name}</h4><p>₹${item.price} x ${item.quantity}</p></div>
+        <div><button onclick="updateCartQty(${item.cartItemId},${item.quantity-1})">-</button> ${item.quantity} <button onclick="updateCartQty(${item.cartItemId},${item.quantity+1})">+</button>
+        <button onclick="removeCartItem(${item.cartItemId})" style="color:red;">🗑️</button></div>
+        <div>₹${item.price * item.quantity}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('cartSubtotal').innerText = subtotal;
+    document.getElementById('cartTotal').innerText = subtotal;
+  }
+
+  async function updateCartQty(cartItemId, newQty) {
+    if (newQty < 1) newQty = 1;
+    await apiCall(`/cart/${cartItemId}`, { method: 'PUT', body: JSON.stringify({ quantity: newQty }) });
+    renderCart();
+    updateCartCount();
+  }
+
+  async function removeCartItem(cartItemId) {
+    await apiCall(`/cart/${cartItemId}`, { method: 'DELETE' });
+    renderCart();
+    updateCartCount();
+  }
+
+  async function clearCart() {
+    await apiCall('/cart/clear/all', { method: 'DELETE' });
+    renderCart();
+    updateCartCount();
+    showToast('Cart cleared');
+  }
+
+  async function applyCoupon() {
+    const code = document.getElementById('couponInput').value.toUpperCase();
+    if (code === 'HUNGRY50' || code === 'SAVE20') {
+      showToast('Coupon applied at checkout');
+    } else {
+      showToast('Invalid coupon');
+    }
+  }
+
+  async function placeOrder() {
+    if (!token) return;
+    const coupon = document.getElementById('couponInput')?.value || '';
+    const res = await apiCall('/orders', { method: 'POST', body: JSON.stringify({ couponCode: coupon.toUpperCase() }) });
+    if (res.orderId) {
+      showPage('orderConfirmPage');
+      updateCartCount();
+      showToast('Order placed!');
+    } else {
+      showToast('Order failed: ' + (res.error || ''));
+    }
+  }
+
+  async function loadOffers() {
+    const offers = await apiCall('/offers');
+    document.getElementById('offersList').innerHTML = offers.map(o => `
+      <div style="background:linear-gradient(145deg,#FF6B00,#FF3E1D); padding:20px; border-radius:20px; color:white; margin-bottom:12px;">
+        <h3>${o.title}</h3><p>${o.description}</p>
+        <button class="btn-small" style="background:white; color:#FF6B00;" onclick="copyCoupon('${o.couponCode}')">Copy Code</button>
+      </div>
+    `).join('');
+  }
+
+  async function loadOrderHistory() {
+    if (!token) return;
+    const orders = await apiCall('/orders/history');
+    document.getElementById('orderHistoryList').innerHTML = orders.map(o => `
+      <div style="background:#f5f5f5; padding:16px; border-radius:16px; margin-bottom:10px;">
+        <strong>#${o.orderNumber}</strong> - ${new Date(o.placedAt).toLocaleDateString()}<br>
+        Total: ₹${o.finalAmount} · ${o.status}
+      </div>
+    `).join('');
+  }
+
+  async function loadNotifications() {
+    if (!token) return;
+    const notifs = await apiCall('/notifications');
+    document.getElementById('notifList').innerHTML = notifs.map(n => `
+      <div style="padding:16px; background:#f5f5f5; border-radius:16px; margin-bottom:10px;">${n.message}</div>
+    `).join('');
+  }
+
+  function copyCoupon(code) {
+    navigator.clipboard?.writeText(code);
+    showToast('Copied ' + code);
+  }
+
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    if (pageId === 'homePage') loadHomeData();
+    if (pageId === 'cartPage') renderCart();
+    if (pageId === 'categoryPage') loadCategoryProducts();
+    if (pageId === 'offersPage') loadOffers();
+    if (pageId === 'ordersPage') loadOrderHistory();
+    if (pageId === 'notificationsPage') loadNotifications();
+  }
+
+  function goBack() { history.back(); }
+  function logout() { localStorage.removeItem('token'); token = null; showPage('loginPage'); }
+  function showToast(msg) {
+    const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+
+  // Global search
+  document.getElementById('globalSearch')?.addEventListener('input', async (e) => {
+    const q = e.target.value;
+    if (!q.trim()) return;
+    const data = await apiCall(`/products?search=${encodeURIComponent(q)}`);
+    document.getElementById('searchResultsGrid').innerHTML = data.products.map(p => productCard(p)).join('');
+  });
+
+  document.getElementById('catSearch')?.addEventListener('input', async (e) => {
+    const q = e.target.value;
+    if (!currentCategory) return;
+    const data = await apiCall(`/products?category=${encodeURIComponent(currentCategory)}&search=${encodeURIComponent(q)}`);
+    document.getElementById('catProductGrid').innerHTML = data.products.map(p => productCard(p)).join('');
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('token')) {
+      token = localStorage.getItem('token');
+      showPage('homePage');
+      loadHomeData();
+      updateCartCount();
+    }
+  });
+
+  window.login = login;
+  window.addToCart = addToCart;
+  window.showCategoryPage = showCategoryPage;
+  window.filterSubcat = filterSubcat;
+  window.applySort = applySort;
+  window.loadMoreProducts = loadMoreProducts;
+  window.updateCartQty = updateCartQty;
+  window.removeCartItem = removeCartItem;
+  window.clearCart = clearCart;
+  window.placeOrder = placeOrder;
+  window.showPage = showPage;
+  window.goBack = goBack;
+  window.applyCoupon = applyCoupon;
+  window.copyCoupon = copyCoupon;
+  window.logout = logout;
+</script>
+</body>
+</html>
